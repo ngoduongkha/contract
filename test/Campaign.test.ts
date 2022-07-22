@@ -96,17 +96,19 @@ describe("Campaign Contract", () => {
         ).to.be.revertedWith("Ownable: caller is not the owner");
       });
     });
+
+    async function createRequestFixture() {
+      const { campaign, accounts } = await loadFixture(deployContractFixture);
+      await campaign.contribute({ value: ethers.utils.parseEther("0.02") });
+      await campaign.createRequest(
+        "Buy something",
+        ethers.utils.parseEther("0.00001"),
+        accounts[1].address
+      );
+      return { campaign, accounts };
+    }
+
     describe("Request approval", () => {
-      async function createRequestFixture() {
-        const { campaign, accounts } = await loadFixture(deployContractFixture);
-        await campaign.contribute({ value: ethers.utils.parseEther("0.02") });
-        await campaign.createRequest(
-          "Buy something",
-          ethers.utils.parseEther("0.00001"),
-          accounts[1].address
-        );
-        return { campaign, accounts };
-      }
       it("should fail if not a approver", async () => {
         const { campaign, accounts } = await loadFixture(createRequestFixture);
         await expect(campaign.connect(accounts[1]).approveRequest(0)).to.be
@@ -124,42 +126,32 @@ describe("Campaign Contract", () => {
         expect(request.approvalCount).to.be.equal(1);
       });
     });
-    describe("Request finalization", () => {
-      async function abc() {
-        const { campaign, accounts } = await loadFixture(deployContractFixture);
-        await campaign.contribute({ value: ethers.utils.parseEther("0.02") });
-        await campaign.createRequest(
-          "Buy something",
-          ethers.utils.parseEther("0.00001"),
-          accounts[1].address
-        );
 
-        await campaign.approveRequest(0);
-        return { campaign, accounts };
-      }
+    describe("Request finalization", () => {
       it("should restrict when stranger finalize request", async () => {
-        const { campaign, accounts } = await loadFixture(abc);
+        const { campaign, accounts } = await loadFixture(createRequestFixture);
         await expect(
           campaign.connect(accounts[1]).finalizeRequest(0)
         ).to.be.revertedWith("Ownable: caller is not the owner");
       });
       it("should finalize request successfully", async () => {
-        const { campaign, accounts } = await loadFixture(abc);
-
+        const { campaign, accounts } = await loadFixture(createRequestFixture);
+        await campaign.approveRequest(0);
         await expect(campaign.finalizeRequest(0)).to.changeEtherBalance(
           accounts[1],
           ethers.utils.parseEther("0.00001")
         );
       });
       it("should fail when request already completed", async () => {
-        const { campaign, accounts } = await loadFixture(abc);
+        const { campaign } = await loadFixture(createRequestFixture);
 
+        await campaign.approveRequest(0);
         await campaign.finalizeRequest(0);
 
         await expect(campaign.finalizeRequest(0)).to.be.reverted;
       });
       it("should fail when request doesn't have enough approvers", async () => {
-        const { campaign, accounts } = await loadFixture(abc);
+        const { campaign, accounts } = await loadFixture(createRequestFixture);
 
         await campaign
           .connect(accounts[1])

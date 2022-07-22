@@ -7,7 +7,7 @@ contract CampaignFactory {
     address[] public deployedCampaigns;
 
     function createCampaign(uint256 minimum) public {
-        Campaign newCampaign = new Campaign(minimum, msg.sender);
+        Campaign newCampaign = new Campaign(minimum);
         deployedCampaigns.push(address(newCampaign));
     }
 
@@ -26,14 +26,14 @@ contract Campaign is Ownable {
         mapping(address => bool) approvals;
     }
 
+    Request[] public requests;
     uint256 public minimumContribution;
     mapping(address => bool) public approvers;
     uint256 approversCount;
-    Request[] public requests;
 
-    constructor(uint256 minimum, address owner) {
+    constructor(uint256 minimum) {
         minimumContribution = minimum;
-        _transferOwnership(owner);
+        _transferOwnership(tx.origin);
     }
 
     function contribute() public payable {
