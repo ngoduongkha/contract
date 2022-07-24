@@ -156,7 +156,7 @@ describe("Campaign Contract", () => {
         await campaign
           .connect(accounts[1])
           .contribute({ value: ethers.utils.parseEther("0.02") });
-
+~
         await expect(campaign.finalizeRequest(0)).to.be.reverted;
       });
     });
