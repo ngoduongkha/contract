@@ -3,8 +3,7 @@ export {};
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      PRIVATE_KEY: string;
-      PROJECT_ID: string;
+      INFURA_API_KEY: string;
       ENV: "test" | "dev" | "prod";
     }
   }
